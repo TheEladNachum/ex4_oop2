@@ -1,14 +1,18 @@
 #include "Controller.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "board.h"
+#include "CellType.h"
+#include "Constants.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
 
 void Controller::run()
 {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Xonix");
+    sf::RenderWindow window(sf::VideoMode(1200, 800), "Xonix");
     Player player;
+    Board board(window.getSize(), Constants::CELLSIZE, 1);
 
     window.setFramerateLimit(60);
     while (window.isOpen())
@@ -37,6 +41,7 @@ void Controller::run()
         }
 
         window.clear(sf::Color::Black);
+        board.draw(window);
         window.display();
     }
 
