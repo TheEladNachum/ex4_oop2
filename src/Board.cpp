@@ -3,15 +3,14 @@
 
 
 
-Board::Board(sf::Vector2u windowSize, float cellSize, int borderThickness)
-    : m_cellSize(cellSize), m_border(borderThickness)
+Board::Board(sf::Vector2u windowSizeInPixels, int cellSize, int borderThickness)
+    : m_tileSize(cellSize), m_border(borderThickness)
 {
-    int rows = static_cast<int>(windowSize.y / cellSize);
-    int cols = static_cast<int>(windowSize.x / cellSize);
+    int rows = static_cast<int>(windowSizeInPixels.y / cellSize);
+    int cols = static_cast<int>(windowSizeInPixels.x / cellSize);
 
     m_board.resize(rows, std::vector<CellType>(cols, CellType::GROUND));
 
-    // set frame
     for (int r = 0; r < rows; ++r)
     {
         for (int c = 0; c < cols; ++c)
@@ -26,33 +25,26 @@ Board::Board(sf::Vector2u windowSize, float cellSize, int borderThickness)
 }
 
 
+
 void Board::draw(sf::RenderWindow& window) const
 {
-    sf::RectangleShape cellShape(sf::Vector2f(m_cellSize, m_cellSize));
+    sf::RectangleShape cellShape(sf::Vector2f((float)m_tileSize, (float)m_tileSize));
 
-    for (int row = 0; row < static_cast<int>(m_board.size()); ++row)
+    for (int row = 0; row < m_board.size(); ++row)
     {
-        for (int col = 0; col < static_cast<int>(m_board[row].size()); ++col)
+        for (int col = 0; col < m_board[row].size(); ++col)
         {
-            cellShape.setPosition(col * m_cellSize, row * m_cellSize);
+            cellShape.setPosition(
+                static_cast<float>(col * m_tileSize),
+                static_cast<float>(row * m_tileSize)
+            );
 
             switch (m_board[row][col])
             {
-            case CellType::GROUND:
-                cellShape.setFillColor(sf::Color::Black);
-                break;
-
-            case CellType::WALL:
-                cellShape.setFillColor(sf::Color::Blue);
-                break;
-
-            case CellType::PATH:
-                cellShape.setFillColor(sf::Color::Magenta);
-                break;
-
-            default:
-                cellShape.setFillColor(sf::Color::Red); // fallback
-                break;
+            case CellType::GROUND: cellShape.setFillColor(sf::Color::Black); break;
+            case CellType::WALL:   cellShape.setFillColor(sf::Color::Blue); break;
+            case CellType::PATH:   cellShape.setFillColor(sf::Color::Magenta); break;
+            default:               cellShape.setFillColor(sf::Color::Red); break;
             }
 
             window.draw(cellShape);
@@ -61,9 +53,11 @@ void Board::draw(sf::RenderWindow& window) const
 }
 
 
-
-CellType Board::getCellType(int row, int col) const
+CellType Board::getCellType(const sf::Vector2i& gridPos) const
 {
+    int row = gridPos.y;
+    int col = gridPos.x;
+
     if (row < 0 || row >= static_cast<int>(m_board.size()) ||
         col < 0 || col >= static_cast<int>(m_board[0].size()))
     {
@@ -73,8 +67,11 @@ CellType Board::getCellType(int row, int col) const
     return m_board[row][col];
 }
 
-void Board::setCell(int row, int col, CellType type)
+void Board::setCell(const sf::Vector2i& gridPos, CellType type)
 {
+    int row = gridPos.y;
+    int col = gridPos.x;
+
     if (row < 0 || row >= static_cast<int>(m_board.size()) ||
         col < 0 || col >= static_cast<int>(m_board[0].size()))
     {
@@ -83,5 +80,4 @@ void Board::setCell(int row, int col, CellType type)
 
     m_board[row][col] = type;
 }
-
 

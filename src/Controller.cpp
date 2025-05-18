@@ -13,10 +13,12 @@ void Controller::run()
     sf::RenderWindow window(sf::VideoMode(1200, 800), "Xonix");
     Player player;
     Board board(window.getSize(), Constants::CELLSIZE, 1);
+    sf::Clock clock;
 
     window.setFramerateLimit(60);
     while (window.isOpen())
     {
+        float deltaTime = clock.restart().asSeconds();
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -30,14 +32,14 @@ void Controller::run()
         for (sf::Keyboard::Key key : {sf::Keyboard::Right, sf::Keyboard::Left, sf::Keyboard::Up, sf::Keyboard::Down})
         {
             if (sf::Keyboard::isKeyPressed(key)) {
-                player.move(0.0);
+                player.move(deltaTime);
             }
         }
   
         //update enemy movement 
         for (auto& obj : m_movingObject)
         {
-            obj->move(0.0);
+            obj->move(deltaTime);
         }
 
         window.clear(sf::Color::Black);
