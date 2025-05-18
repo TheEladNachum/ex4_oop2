@@ -4,7 +4,7 @@
 
 class Board {
 public:
-    Board(sf::Vector2u windowSizeInPixels, int cellSize, int borderThickness);
+    Board(sf::Vector2u windowSize, float cellSize, int borderThickness);
     void draw(sf::RenderWindow& window) const;
 
     CellType getCellType(const sf::Vector2i& gridPos) const;
@@ -12,6 +12,6 @@ public:
 
 private:
     std::vector<std::vector<CellType>> m_board;
-    int m_tileSize;
+    float m_cellSize;
     int m_border;
 };
