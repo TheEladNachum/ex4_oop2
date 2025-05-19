@@ -3,5 +3,5 @@
 
 class Enemy : public MovingObject {
 	public:
-		void move(float deltaTime) override;
+		void movement(float deltaTime, sf::Keyboard::Key key = sf::Keyboard::Unknown) override;
 };

@@ -9,7 +9,8 @@ public:
     static constexpr int WINDOW_WIDTH = 1200;
     static constexpr int WINDOW_HEIGHT = 800;
 
-    static constexpr float CELLSIZE = 20.f;
+    static constexpr int CELLSIZE = 20;
+    static constexpr int MARGIN = CELLSIZE*2;
 
 };
 

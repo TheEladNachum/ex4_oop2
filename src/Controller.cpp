@@ -11,41 +11,45 @@
 void Controller::run()
 {
     sf::RenderWindow window(sf::VideoMode(1200, 800), "Xonix");
-    Player player;
     Board board(window.getSize(), Constants::CELLSIZE, 1);
+
+    Player player(sf::Vector2u(4,4 ),10, board.getBoardSize());
     sf::Clock clock;
 
     window.setFramerateLimit(60);
+    sf::Keyboard::Key currentKey = sf::Keyboard::Unknown;
+
     while (window.isOpen())
     {
         float deltaTime = clock.restart().asSeconds();
+
         sf::Event event;
         while (window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed) {
+            if (event.type == sf::Event::Closed)
                 window.close();
-                exit(EXIT_SUCCESS);
+
+            // עידכון הכיוון רק כשנלחץ מקש
+            if (event.type == sf::Event::KeyPressed)
+            {
+                if (event.key.code == sf::Keyboard::Up ||
+                    event.key.code == sf::Keyboard::Down ||
+                    event.key.code == sf::Keyboard::Left ||
+                    event.key.code == sf::Keyboard::Right)
+                {
+                    currentKey = event.key.code; // עידכון כיוון
+                }
             }
         }
 
-        //player movement
-        for (sf::Keyboard::Key key : {sf::Keyboard::Right, sf::Keyboard::Left, sf::Keyboard::Up, sf::Keyboard::Down})
-        {
-            if (sf::Keyboard::isKeyPressed(key)) {
-                player.move(deltaTime);
-            }
-        }
-  
-        //update enemy movement 
-        for (auto& obj : m_movingObject)
-        {
-            obj->move(deltaTime);
-        }
+        player.movement(deltaTime, currentKey); // קריאה כל פריים – חובה
 
-        window.clear(sf::Color::Black);
+        window.clear();
         board.draw(window);
+        player.draw(window);
         window.display();
     }
+
 
     return;
 }
