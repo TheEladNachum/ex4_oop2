@@ -20,7 +20,7 @@ void Enemy::movement(float deltaTime, sf::Keyboard::Key)
         m_loc = static_cast<sf::Vector2u>(static_cast<sf::Vector2i>(m_loc) + m_direction);
         m_shape.setPosition(
             m_loc.x * Constants::CELLSIZE,
-            m_loc.y * Constants::CELLSIZE + Constants::MARGIN
+            m_loc.y * Constants::CELLSIZE
         );
         return;
     }

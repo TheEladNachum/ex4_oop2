@@ -3,8 +3,10 @@
 #include "CellType.h"
 #include "Constants.h"
 #include <queue>
-#include <Enemy.h>
+#include <vector>
+#include <memory>
 
+class Enemy;
 class Board {
 public:
     Board(sf::Vector2u windowSize, float cellSize, int borderThickness);

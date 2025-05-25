@@ -3,6 +3,8 @@
 #include <vector>
 #include "MovingObject.h"
 #include "Enemy.h"
+#include "Player.h"
+
 
 class Controller {
 

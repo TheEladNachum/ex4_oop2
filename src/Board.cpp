@@ -1,65 +1,7 @@
 ﻿#include "Board.h"
 #include "CellType.h"
+#include "Enemy.h"
 
-
-
-//Board::Board(sf::Vector2u windowSize, float cellSize, int borderThickness)
-//    : m_cellSize(cellSize), m_border(borderThickness)
-//{
-//    int rows = static_cast<int>(windowSize.y / cellSize);
-//    int cols = static_cast<int>(windowSize.x / cellSize);
-//
-//    m_board.resize(rows, std::vector<CellType>(cols, CellType::GROUND));
-//
-//    // set frame
-//    for (int r = 0; r < rows; ++r)
-//    {
-//        for (int c = 0; c < cols; ++c)
-//        {
-//            if (r < m_border || r >= rows - m_border ||
-//                c < m_border || c >= cols - m_border)
-//            {
-//                m_board[r][c] = CellType::WALL;
-//            }
-//        }
-//    }
-//}
-//
-//
-//
-//void Board::draw(sf::RenderWindow& window) const
-//{
-//    sf::RectangleShape cellShape(sf::Vector2f(m_cellSize, m_cellSize));
-//
-//    for (int row = 0; row < static_cast<int>(m_board.size()); ++row)
-//    {
-//        for (int col = 0; col < static_cast<int>(m_board[row].size()); ++col)
-//        {
-//            cellShape.setPosition(col * m_cellSize, row * m_cellSize);
-//
-//            switch (m_board[row][col])
-//            {
-//            case CellType::GROUND:
-//                cellShape.setFillColor(sf::Color::Black);
-//                break;
-//
-//            case CellType::WALL:
-//                cellShape.setFillColor(sf::Color::Blue);
-//                break;
-//
-//            case CellType::PATH:
-//                cellShape.setFillColor(sf::Color::Magenta);
-//                break;
-//
-//            default:
-//                cellShape.setFillColor(sf::Color::Red); // fallback
-//                break;
-//            }
-//
-//            window.draw(cellShape);
-//        }
-//    }
-//}
 
 Board::Board(sf::Vector2u windowSize, float cellSize, int borderThickness)
     : m_cellSize(cellSize), m_border(borderThickness)
@@ -97,15 +39,6 @@ void Board::draw(sf::RenderWindow& window) const
     {
         for (int col = 0; col < static_cast<int>(m_board[row].size()); ++col)
         {
-            /*switch (m_board[row][col])
-            {
-            case CellType::GROUND:
-                cellShape.setFillColor(sf::Color::Black);
-                break;
-            case CellType::WALL:
-                cellShape.setFillColor(sf::Color::Blue);
-                break;
-            }*/
             switch (m_board[row][col])
             {
                 case CellType::GROUND:
@@ -176,131 +109,6 @@ std::vector<sf::Vector2u> Board::getLegalPositions() const
     return legalPositions;
 }
 
-//void Board::fillSmallestEnclosedArea(const std::vector<std::unique_ptr<Enemy>>& enemies)
-//{
-//    const int rows = static_cast<int>(m_board.size());
-//    const int cols = static_cast<int>(m_board[0].size());
-//    std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
-//
-//    std::vector<std::pair<int, int>> smallestRegion;
-//    bool foundValidRegion = false;
-//
-//    for (int y = 0; y < rows; ++y)
-//    {
-//        for (int x = 0; x < cols; ++x)
-//        {
-//            if (visited[y][x])
-//                continue;
-//
-//            if (m_board[y][x] != CellType::GROUND)
-//                continue;
-//
-//            std::vector<std::pair<int, int>> region;
-//            if (floodFill(x, y, region, enemies))
-//            {
-//                // סמן כתאים שנבדקו
-//                for (const auto& cell : region)
-//                    visited[cell.second][cell.first] = true;
-//
-//                if (!foundValidRegion || region.size() < smallestRegion.size())
-//                {
-//                    smallestRegion = std::move(region);
-//                    foundValidRegion = true;
-//                }
-//            }
-//        }
-//    }
-//
-//    // אם מצאנו אזור קטן תקף – נמלא אותו
-//    for (const auto& cell : smallestRegion)
-//    {
-//        int x = cell.first;
-//        int y = cell.second;
-//        m_board[y][x] = CellType::WALL;
-//    }
-//
-//    // סגור את השביל (PATH) תמיד
-//    for (int y = 0; y < rows; ++y)
-//    {
-//        for (int x = 0; x < cols; ++x)
-//        {
-//            if (m_board[y][x] == CellType::PATH)
-//                m_board[y][x] = CellType::WALL;
-//        }
-//    }
-//}
-//
-//
-//bool Board::floodFill(int x, int y, std::vector<std::pair<int, int>>& listToDraw, const std::vector<std::unique_ptr<Enemy>>& enemies)
-//{
-//    const int rows = static_cast<int>(m_board.size());
-//    const int cols = static_cast<int>(m_board[0].size());
-//
-//    if (x < 0 || x >= cols || y < 0 || y >= rows)
-//        return false;
-//
-//    if (m_board[y][x] == CellType::WALL)
-//        return false;
-//
-//    std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
-//    std::queue<std::pair<int, int>> q;
-//
-//    int dx[] = { -1, 0, 1, 0 };
-//    int dy[] = { 0, 1, 0, -1 };
-//
-//    bool touchesEdge = false;
-//    bool hasPath = false;
-//
-//    q.emplace(x, y);
-//    visited[y][x] = true;
-//    listToDraw.emplace_back(x, y);
-//    if (m_board[y][x] == CellType::PATH) hasPath = true;
-//
-//    while (!q.empty())
-//    {
-//        auto [cx, cy] = q.front(); q.pop();
-//
-//        for (int i = 0; i < 4; ++i)
-//        {
-//            int nx = cx + dx[i];
-//            int ny = cy + dy[i];
-//
-//            if (nx < 0 || ny < 0 || nx >= cols || ny >= rows)
-//            {
-//                touchesEdge = true;
-//                continue;
-//            }
-//
-//            if (visited[ny][nx])
-//                continue;
-//
-//            if (m_board[ny][nx] == CellType::WALL)
-//                continue;
-//
-//            // אויב בפנים = פסול
-//            for (const auto& enemy : enemies)
-//            {
-//                sf::Vector2u ep = enemy->getLocation();
-//                if (ep.x == static_cast<unsigned>(nx) && ep.y == static_cast<unsigned>(ny))
-//                {
-//                    listToDraw.clear();
-//                    return false;
-//                }
-//            }
-//
-//            visited[ny][nx] = true;
-//            q.emplace(nx, ny);
-//            listToDraw.emplace_back(nx, ny);
-//
-//            if (m_board[ny][nx] == CellType::PATH)
-//                hasPath = true;
-//        }
-//    }
-//
-//    return (!touchesEdge && hasPath);
-//}
-
-
 
 bool Board::hasPathCells() const
 {
@@ -315,7 +123,6 @@ bool Board::hasPathCells() const
     return false;
 }
 
-// Board.cpp
 void Board::fillClosedArea(const std::vector<std::unique_ptr<Enemy>>& enemies)
 {
     const int rows = static_cast<int>(m_board.size());

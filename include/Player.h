@@ -7,7 +7,7 @@ public:
 
 	Player(const sf::Vector2u& startLocation, float speed, sf::Vector2u boardSize);
 
-	void movement(float deltaTime, sf::Keyboard::Key key) override;
+	void movement(float deltaTime, sf::Keyboard::Key key = sf::Keyboard::Unknown) override;
 	void updatePathOnBoard(Board& board);
 	void clearTrail(Board& board);
 	void resetToStart();

@@ -1,5 +1,8 @@
 #pragma once
 #include "MovingObject.h"
+#include "CellType.h"
+#include "Board.h"
+
 
 class Enemy : public MovingObject {
 public:

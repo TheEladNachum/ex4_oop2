@@ -1,6 +1,4 @@
 ﻿#include "Controller.h"
-#include "Player.h"
-#include "Enemy.h"
 #include "board.h"
 #include "CellType.h"
 #include "Constants.h"
@@ -15,97 +13,103 @@
 void Controller::run()  
 {  
         sf::RenderWindow window(sf::VideoMode(1200, 800), "Xonix");
-    try
-    {
-        Board board(window.getSize(), Constants::CELLSIZE, 1);
-
-        Player player(sf::Vector2u(4, 4), 10, board.getBoardSize());
-        sf::Clock clock;
-        readLevelConfiguration(board);
-
-        window.setFramerateLimit(60);
-        sf::Keyboard::Key currentKey = sf::Keyboard::Unknown;
-
-
-        //------------GAME LOOP--------------  
-        while (window.isOpen())
+        try
         {
-            float deltaTime = clock.restart().asSeconds();
+            Board board(window.getSize(), Constants::CELLSIZE, 1);
 
-            sf::Event event;
-            while (window.pollEvent(event))
+            Player player(sf::Vector2u(0, 0), 10, board.getBoardSize());
+            sf::Clock clock;
+            readLevelConfiguration(board);
+
+            window.setFramerateLimit(60);
+            sf::Keyboard::Key currentKey = sf::Keyboard::Unknown;
+
+
+            //------------GAME LOOP--------------  
+            while (window.isOpen())
             {
-                if (event.type == sf::Event::Closed)
-                    window.close();
+                float deltaTime = clock.restart().asSeconds();
 
-                // Update direction only when a key is pressed  
-                if (event.type == sf::Event::KeyPressed)
+                sf::Event event;
+                while (window.pollEvent(event))
                 {
-                    if (event.key.code == sf::Keyboard::Up ||
-                        event.key.code == sf::Keyboard::Down ||
-                        event.key.code == sf::Keyboard::Left ||
-                        event.key.code == sf::Keyboard::Right)
+                    if (event.type == sf::Event::Closed)
+                        window.close();
+
+                    // Update direction only when a key is pressed  
+                    if (event.type == sf::Event::KeyPressed)
                     {
-                        currentKey = event.key.code;
+                        if (event.key.code == sf::Keyboard::Up ||
+                            event.key.code == sf::Keyboard::Down ||
+                            event.key.code == sf::Keyboard::Left ||
+                            event.key.code == sf::Keyboard::Right)
+                        {
+                            currentKey = event.key.code;
+                        }
                     }
                 }
-            }
-            for (auto& enemy : m_enemies)
-            {
-                enemy->updateTypeOnBoard(board);
-                enemy->movement(deltaTime, currentKey);
-            }
-
-        player.movement(deltaTime, currentKey);
-        player.updatePathOnBoard(board);
-
-        bool playerLost = false;
-
-        for (const auto& enemy : m_enemies)
-        {
-            if (player.getGlobalBounds().intersects(enemy->getGlobalBounds()))
-            {
-                std::cout << "PLAYER LOST! (collision)" << std::endl;
-                playerLost = true;
-                player.clearTrail(board);
-                player.resetToStart();
-                break;
-            }
-        }
-
-        if (!playerLost)
-        {
-            for (const auto& enemy : m_enemies)
-            {
-                if (board.getCellType(enemy->getLocation()) == CellType::PATH)
+                for (auto& enemy : m_enemies)
                 {
-                    std::cout << "PLAYER LOST! (enemy touched path)" << std::endl;
-                    playerLost = true;
-                    player.clearTrail(board);
-                    player.resetToStart();
-                    break;
+                    enemy->updateTypeOnBoard(board);
+                    enemy->movement(deltaTime, currentKey);
                 }
+
+                player.movement(deltaTime, currentKey);
+                player.updatePathOnBoard(board);
+
+                bool playerLost = false;
+
+                for (const auto& enemy : m_enemies)
+                {
+                    if (player.getGlobalBounds().intersects(enemy->getGlobalBounds()))
+                    {
+                        std::cout << "PLAYER LOST! (collision)" << std::endl;
+                        playerLost = true;
+                        player.clearTrail(board);
+                        player.resetToStart();
+                        break;
+                    }
+                }
+
+                if (!playerLost)
+                {
+                    for (const auto& enemy : m_enemies)
+                    {
+                        if (board.getCellType(enemy->getLocation()) == CellType::PATH)
+                        {
+                            std::cout << "PLAYER LOST! (enemy touched path)" << std::endl;
+                            playerLost = true;
+                            player.clearTrail(board);
+                            player.resetToStart();
+                            break;
+                        }
+                    }
+                }
+
+                if (!playerLost &&
+                    board.getCellType(player.getLocation()) == CellType::WALL &&
+                    board.hasPathCells())
+                {
+                    board.fillClosedArea(m_enemies);
+                }
+
+
+
+                window.clear();
+                board.draw(window);
+                player.draw(window);
+                for (const auto& enemy : m_enemies)
+                {
+                    enemy->draw(window);
+                }
+                window.display();
             }
         }
-
-        if (!playerLost &&
-            board.getCellType(player.getLocation()) == CellType::WALL &&
-            board.hasPathCells())
+        catch (const std::exception& e)
         {
-            board.fillClosedArea(m_enemies);
+            std::cerr << "Error: " << e.what() << std::endl;
+            window.close();
         }
-
-
-
-        window.clear();
-        board.draw(window);
-        player.draw(window);
-        for (const auto& enemy : m_enemies)
-        {
-            enemy->draw(window);
-        }
-        window.display();
-    }
 
    return;  
 }
