@@ -51,12 +51,44 @@ void Player::movement(float deltaTime, sf::Keyboard::Key key)
     m_loc = static_cast<sf::Vector2u>(newPos);
     m_shape.setPosition(
         m_loc.x * Constants::CELLSIZE,
-        m_loc.y * Constants::CELLSIZE + Constants::MARGIN
+        m_loc.y * Constants::CELLSIZE
     );
 
     // אפס טיימר
     m_timeSinceLastMove = 0.f;
 }
 
+void Player::updatePathOnBoard(Board& board)
+{
+    if (board.getCellType(m_loc) == CellType::GROUND)
+    {
+        board.setCell(m_loc, CellType::PATH);
+        m_trail.push_back(m_loc);  
+    }
+}
 
+void Player::clearTrail(Board& board)
+{
+    for (const auto& cell : m_trail)
+    {
+        if (board.getCellType(cell) == CellType::PATH)
+        {
+            board.setCell(cell, CellType::GROUND);
+        }
+    }
+    m_trail.clear();
+}
+
+
+
+void Player::resetToStart()
+{
+    m_loc = getStartLocation();
+    m_shape.setPosition(
+        m_loc.x * Constants::CELLSIZE,
+        m_loc.y * Constants::CELLSIZE + Constants::MARGIN
+    );
+    m_direction = { 0, 0 };
+    m_timeSinceLastMove = 0.f;
+}
 

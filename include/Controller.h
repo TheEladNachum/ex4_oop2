@@ -10,7 +10,7 @@ class Controller {
 		void run();
 
 	private:
-		std::vector<std::unique_ptr<Enemy>> m_movingObject;
+		std::vector<std::unique_ptr<Enemy>> m_enemies;
 		sf::Clock m_Clock;
 
 };

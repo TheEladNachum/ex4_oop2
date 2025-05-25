@@ -1,4 +1,4 @@
-#include "Controller.h"
+ï»¿#include "Controller.h"
 #include "Player.h"
 #include "Enemy.h"
 #include "board.h"
@@ -13,9 +13,17 @@ void Controller::run()
     sf::RenderWindow window(sf::VideoMode(1200, 800), "Xonix");
     Board board(window.getSize(), Constants::CELLSIZE, 1);
 
-    Player player(sf::Vector2u(4,4 ),10, board.getBoardSize());
+    Player player(sf::Vector2u(0,2 ),10, board.getBoardSize());
     auto legalPositions = board.getLegalPositions();
-    Enemy enemy(legalPositions, 3.0f);
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
+    m_enemies.push_back(std::make_unique<Enemy>(legalPositions, 3.0f));
     sf::Clock clock;
 
     window.setFramerateLimit(60);
@@ -31,7 +39,7 @@ void Controller::run()
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            // òéãëåï äëéååï ø÷ ëùðìçõ î÷ù
+            // ×¢×™×“×›×•×Ÿ ×”×›×™×•×•×Ÿ ×¨×§ ×›×©× ×œ×—×¥ ×ž×§×©
             if (event.type == sf::Event::KeyPressed)
             {
                 if (event.key.code == sf::Keyboard::Up ||
@@ -45,11 +53,53 @@ void Controller::run()
         }
 
         player.movement(deltaTime, currentKey);
+        player.updatePathOnBoard(board);
+
+        bool playerLost = false;
+
+        for (const auto& enemy : m_enemies)
+        {
+            if (player.getGlobalBounds().intersects(enemy->getGlobalBounds()))
+            {
+                std::cout << "PLAYER LOST! (collision)" << std::endl;
+                playerLost = true;
+                player.clearTrail(board);
+                player.resetToStart();
+                break;
+            }
+        }
+
+        if (!playerLost)
+        {
+            for (const auto& enemy : m_enemies)
+            {
+                if (board.getCellType(enemy->getLocation()) == CellType::PATH)
+                {
+                    std::cout << "PLAYER LOST! (enemy touched path)" << std::endl;
+                    playerLost = true;
+                    player.clearTrail(board);
+                    player.resetToStart();
+                    break;
+                }
+            }
+        }
+
+        if (!playerLost &&
+            board.getCellType(player.getLocation()) == CellType::WALL &&
+            board.hasPathCells())
+        {
+            board.fillClosedArea(m_enemies);
+        }
+
+
 
         window.clear();
         board.draw(window);
         player.draw(window);
-        enemy.draw(window);
+        for (const auto& enemy : m_enemies)
+        {
+            enemy->draw(window);
+        }
         window.display();
     }
 

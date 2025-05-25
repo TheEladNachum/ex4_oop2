@@ -2,6 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include "CellType.h"
 #include "Constants.h"
+#include <queue>
+#include <Enemy.h>
 
 class Board {
 public:
@@ -13,6 +15,12 @@ public:
 
     sf::Vector2u getBoardSize() const;
     std::vector<sf::Vector2u> getLegalPositions() const;
+    bool hasPathCells() const;
+
+
+    void fillClosedArea(const std::vector<std::unique_ptr<Enemy>>& enemies); 
+
+
 
 private:
     std::vector<std::vector<CellType>> m_board;

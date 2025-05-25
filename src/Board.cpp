@@ -1,4 +1,4 @@
-#include "Board.h"
+﻿#include "Board.h"
 #include "CellType.h"
 
 
@@ -91,7 +91,7 @@ Board::Board(sf::Vector2u windowSize, float cellSize, int borderThickness)
 void Board::draw(sf::RenderWindow& window) const
 {
     sf::RectangleShape cellShape(sf::Vector2f(m_cellSize, m_cellSize));
-    const float offsetY = 2 * m_cellSize; // ������� ��������
+    const float offsetY = 2 * m_cellSize; // השוליים העליונים
 
     for (int row = 0; row < static_cast<int>(m_board.size()); ++row)
     {
@@ -119,8 +119,8 @@ void Board::draw(sf::RenderWindow& window) const
                    break;
             }
 
-            // ����� ������� �������� �����
-            cellShape.setPosition(col * m_cellSize, row * m_cellSize + offsetY);
+            // הוספת השוליים העליונים בציור
+            cellShape.setPosition(col * m_cellSize, row * m_cellSize);
             window.draw(cellShape);
         }
     }
@@ -174,4 +174,219 @@ std::vector<sf::Vector2u> Board::getLegalPositions() const
     }
 
     return legalPositions;
+}
+
+//void Board::fillSmallestEnclosedArea(const std::vector<std::unique_ptr<Enemy>>& enemies)
+//{
+//    const int rows = static_cast<int>(m_board.size());
+//    const int cols = static_cast<int>(m_board[0].size());
+//    std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
+//
+//    std::vector<std::pair<int, int>> smallestRegion;
+//    bool foundValidRegion = false;
+//
+//    for (int y = 0; y < rows; ++y)
+//    {
+//        for (int x = 0; x < cols; ++x)
+//        {
+//            if (visited[y][x])
+//                continue;
+//
+//            if (m_board[y][x] != CellType::GROUND)
+//                continue;
+//
+//            std::vector<std::pair<int, int>> region;
+//            if (floodFill(x, y, region, enemies))
+//            {
+//                // סמן כתאים שנבדקו
+//                for (const auto& cell : region)
+//                    visited[cell.second][cell.first] = true;
+//
+//                if (!foundValidRegion || region.size() < smallestRegion.size())
+//                {
+//                    smallestRegion = std::move(region);
+//                    foundValidRegion = true;
+//                }
+//            }
+//        }
+//    }
+//
+//    // אם מצאנו אזור קטן תקף – נמלא אותו
+//    for (const auto& cell : smallestRegion)
+//    {
+//        int x = cell.first;
+//        int y = cell.second;
+//        m_board[y][x] = CellType::WALL;
+//    }
+//
+//    // סגור את השביל (PATH) תמיד
+//    for (int y = 0; y < rows; ++y)
+//    {
+//        for (int x = 0; x < cols; ++x)
+//        {
+//            if (m_board[y][x] == CellType::PATH)
+//                m_board[y][x] = CellType::WALL;
+//        }
+//    }
+//}
+//
+//
+//bool Board::floodFill(int x, int y, std::vector<std::pair<int, int>>& listToDraw, const std::vector<std::unique_ptr<Enemy>>& enemies)
+//{
+//    const int rows = static_cast<int>(m_board.size());
+//    const int cols = static_cast<int>(m_board[0].size());
+//
+//    if (x < 0 || x >= cols || y < 0 || y >= rows)
+//        return false;
+//
+//    if (m_board[y][x] == CellType::WALL)
+//        return false;
+//
+//    std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
+//    std::queue<std::pair<int, int>> q;
+//
+//    int dx[] = { -1, 0, 1, 0 };
+//    int dy[] = { 0, 1, 0, -1 };
+//
+//    bool touchesEdge = false;
+//    bool hasPath = false;
+//
+//    q.emplace(x, y);
+//    visited[y][x] = true;
+//    listToDraw.emplace_back(x, y);
+//    if (m_board[y][x] == CellType::PATH) hasPath = true;
+//
+//    while (!q.empty())
+//    {
+//        auto [cx, cy] = q.front(); q.pop();
+//
+//        for (int i = 0; i < 4; ++i)
+//        {
+//            int nx = cx + dx[i];
+//            int ny = cy + dy[i];
+//
+//            if (nx < 0 || ny < 0 || nx >= cols || ny >= rows)
+//            {
+//                touchesEdge = true;
+//                continue;
+//            }
+//
+//            if (visited[ny][nx])
+//                continue;
+//
+//            if (m_board[ny][nx] == CellType::WALL)
+//                continue;
+//
+//            // אויב בפנים = פסול
+//            for (const auto& enemy : enemies)
+//            {
+//                sf::Vector2u ep = enemy->getLocation();
+//                if (ep.x == static_cast<unsigned>(nx) && ep.y == static_cast<unsigned>(ny))
+//                {
+//                    listToDraw.clear();
+//                    return false;
+//                }
+//            }
+//
+//            visited[ny][nx] = true;
+//            q.emplace(nx, ny);
+//            listToDraw.emplace_back(nx, ny);
+//
+//            if (m_board[ny][nx] == CellType::PATH)
+//                hasPath = true;
+//        }
+//    }
+//
+//    return (!touchesEdge && hasPath);
+//}
+
+
+
+bool Board::hasPathCells() const
+{
+    for (const auto& row : m_board)
+    {
+        for (CellType cell : row)
+        {
+            if (cell == CellType::PATH)
+                return true;
+        }
+    }
+    return false;
+}
+
+// Board.cpp
+void Board::fillClosedArea(const std::vector<std::unique_ptr<Enemy>>& enemies)
+{
+    const int rows = static_cast<int>(m_board.size());
+    const int cols = static_cast<int>(m_board[0].size());
+
+    std::vector<std::vector<bool>> globalVisited(rows, std::vector<bool>(cols, false));
+    const int dx[4]{ -1,1,0,0 };
+    const int dy[4]{ 0,0,-1,1 };
+
+    std::vector<std::pair<int, int>> bestRegion;
+    bool bestHasEnemy = false;
+    bool foundRegion = false;
+
+    for (int y = 0; y < rows; ++y)
+        for (int x = 0; x < cols; ++x)
+            if (m_board[y][x] == CellType::PATH)
+                for (int d = 0; d < 4; ++d)
+                {
+                    int sx = x + dx[d], sy = y + dy[d];
+                    if (sx < 0 || sy < 0 || sx >= cols || sy >= rows)   continue;
+                    if (m_board[sy][sx] != CellType::GROUND)            continue;
+                    if (globalVisited[sy][sx])                          continue;
+
+                    std::queue<std::pair<int, int>> q;
+                    std::vector<std::pair<int, int>> region;
+                    bool touchesBorder = false;
+                    bool containsEnemy = false;
+
+                    q.emplace(sx, sy);
+                    globalVisited[sy][sx] = true;
+
+                    while (!q.empty())
+                    {
+                        auto [cx, cy] = q.front(); q.pop();
+                        region.emplace_back(cx, cy);
+
+                        for (const auto& e : enemies)
+                            if (e->getLocation() == sf::Vector2u(cx, cy))
+                                containsEnemy = true;
+
+                        for (int k = 0; k < 4; ++k)
+                        {
+                            int nx = cx + dx[k], ny = cy + dy[k];
+                            if (nx < 0 || ny < 0 || nx >= cols || ny >= rows)
+                            {
+                                touchesBorder = true; continue;
+                            }
+
+                            if (globalVisited[ny][nx])                         continue;
+                            if (m_board[ny][nx] != CellType::GROUND)           continue;
+
+                            globalVisited[ny][nx] = true;
+                            q.emplace(nx, ny);
+                        }
+                    }
+
+                    if (!touchesBorder &&
+                        (!foundRegion || region.size() < bestRegion.size()))
+                    {
+                        bestRegion = std::move(region);
+                        bestHasEnemy = containsEnemy;
+                        foundRegion = true;
+                    }
+                }
+
+    if (foundRegion && !bestHasEnemy)
+        for (auto [x, y] : bestRegion)
+            m_board[y][x] = CellType::WALL;
+
+    for (int y = 0; y < rows; ++y)
+        for (int x = 0; x < cols; ++x)
+            if (m_board[y][x] == CellType::PATH)
+                m_board[y][x] = CellType::WALL;
 }
