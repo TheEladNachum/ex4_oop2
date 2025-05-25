@@ -1,30 +1,44 @@
-#include "Enemy.h"
+ï»¿#include "Enemy.h"
 #include <iostream>
 #include "Constants.h"
 #include <cstdlib>
 #include <ctime>
 
 
-void Enemy::movement(float deltaTime, sf::Keyboard::Key key)
+void Enemy::movement(float deltaTime, sf::Keyboard::Key)
 {
-	std::cout << "enemy Moving" << std::endl;
-}
+    m_timeSinceLastMove += deltaTime;
 
-Enemy::Enemy(const std::vector<sf::Vector2u>& legalPositions, float speed)
-{
-    m_speed = speed;
+    float timePerStep = 0.2f / m_speed;
+    if (m_timeSinceLastMove < timePerStep)
+        return;
 
-    static bool initialized = false;
-    if (!initialized) {
-        std::srand(static_cast<unsigned>(std::time(nullptr)));
-        initialized = true;
+    m_timeSinceLastMove = 0.f;
+
+    if (m_nextCellType != CellType::WALL)
+    {
+        m_loc = static_cast<sf::Vector2u>(static_cast<sf::Vector2i>(m_loc) + m_direction);
+        m_shape.setPosition(
+            m_loc.x * Constants::CELLSIZE,
+            m_loc.y * Constants::CELLSIZE + Constants::MARGIN
+        );
+        return;
     }
 
-    if (legalPositions.empty())
-        throw std::runtime_error("No legal positions to place enemy!");
+    if (m_nextXType == CellType::WALL)
+        m_direction.x *= -1;
 
-    // áåçø îé÷åí à÷øàé îúåê äøùéîä
-    m_loc = legalPositions[std::rand() % legalPositions.size()];
+    if (m_nextYType == CellType::WALL)
+        m_direction.y *= -1;
+
+    
+}
+
+
+Enemy::Enemy(sf::Vector2u loc, float speed)
+{
+    m_speed = speed;
+    m_loc = loc;
 
     m_shape.setSize(sf::Vector2f(Constants::CELLSIZE, Constants::CELLSIZE));
     m_shape.setFillColor(sf::Color::Red);
@@ -32,6 +46,32 @@ Enemy::Enemy(const std::vector<sf::Vector2u>& legalPositions, float speed)
         m_loc.x * Constants::CELLSIZE,
         m_loc.y * Constants::CELLSIZE + Constants::MARGIN
     );
+
+
+    int dx[] = { 1, -1 };
+    int dy[] = { 1, -1 };
+    m_direction = { dx[std::rand() % 2], dy[std::rand() % 2] };
+    //m_direction = { 1, -1 };
+
 }
 
+
+void Enemy::updateTypeOnBoard(Board& board)
+{
+    sf::Vector2i curr = static_cast<sf::Vector2i>(m_loc);
+    sf::Vector2i next = curr + m_direction;
+    sf::Vector2i nextX = curr + sf::Vector2i(m_direction.x, 0);
+    sf::Vector2i nextY = curr + sf::Vector2i(0, m_direction.y);
+
+    m_nextCellType = board.getCellType(static_cast<sf::Vector2u>(next));
+    m_nextXType = board.getCellType(static_cast<sf::Vector2u>(nextX));
+    m_nextYType = board.getCellType(static_cast<sf::Vector2u>(nextY));
+
+    // ×–×”×” ×œ×¤×•× ×§×¦×™×” ×©×œ ×”×—×‘×¨: ×©×™× ×•×™ ×›×™×•×•×Ÿ ×œ×¤×™ ×¤×’×™×¢×•×ª
+    if (m_nextYType == CellType::WALL)
+        m_direction.y *= -1;
+
+    if (m_nextXType == CellType::WALL)
+        m_direction.x *= -1;
+}
 
