@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
+#include "Board.h"
 
 class MovingObject {
 
@@ -12,7 +13,7 @@ public:
     sf::Vector2u getLocation() const;
 
     sf::FloatRect getGlobalBounds() const;
-    virtual void draw(sf::RenderTarget& target) const;  //virtual????
+    virtual void draw(sf::RenderTarget& target) const;  
 
     //for game restart
     void setStartLocation(const sf::Vector2u& loc);

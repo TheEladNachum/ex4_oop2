@@ -10,7 +10,9 @@ class Controller {
 		void run();
 
 	private:
-		std::vector<std::unique_ptr<Enemy>> m_movingObject;
+		std::vector<std::unique_ptr<Enemy>> m_enemies;
+		int m_passingPercentage = 0;
 		sf::Clock m_Clock;
 
+		void readLevelConfiguration(const Board& board);
 };

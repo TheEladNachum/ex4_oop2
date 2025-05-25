@@ -6,53 +6,118 @@
 #include "Constants.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <fstream>
+#include <random>
+#include <set>
 
 
-void Controller::run()
-{
-    sf::RenderWindow window(sf::VideoMode(1200, 800), "Xonix");
-    Board board(window.getSize(), Constants::CELLSIZE, 1);
 
-    Player player(sf::Vector2u(4,4 ),10, board.getBoardSize());
-    auto legalPositions = board.getLegalPositions();
-    Enemy enemy(legalPositions, 3.0f);
-    sf::Clock clock;
-
-    window.setFramerateLimit(60);
-    sf::Keyboard::Key currentKey = sf::Keyboard::Unknown;
-
-    while (window.isOpen())
+void Controller::run()  
+{  
+        sf::RenderWindow window(sf::VideoMode(1200, 800), "Xonix");
+    try
     {
-        float deltaTime = clock.restart().asSeconds();
+        Board board(window.getSize(), Constants::CELLSIZE, 1);
 
-        sf::Event event;
-        while (window.pollEvent(event))
+        Player player(sf::Vector2u(4, 4), 10, board.getBoardSize());
+        sf::Clock clock;
+        readLevelConfiguration(board);
+
+        window.setFramerateLimit(60);
+        sf::Keyboard::Key currentKey = sf::Keyboard::Unknown;
+
+
+        //------------GAME LOOP--------------  
+        while (window.isOpen())
         {
-            if (event.type == sf::Event::Closed)
-                window.close();
+            float deltaTime = clock.restart().asSeconds();
 
-            // עידכון הכיוון רק כשנלחץ מקש
-            if (event.type == sf::Event::KeyPressed)
+            sf::Event event;
+            while (window.pollEvent(event))
             {
-                if (event.key.code == sf::Keyboard::Up ||
-                    event.key.code == sf::Keyboard::Down ||
-                    event.key.code == sf::Keyboard::Left ||
-                    event.key.code == sf::Keyboard::Right)
+                if (event.type == sf::Event::Closed)
+                    window.close();
+
+                // Update direction only when a key is pressed  
+                if (event.type == sf::Event::KeyPressed)
                 {
-                    currentKey = event.key.code;
+                    if (event.key.code == sf::Keyboard::Up ||
+                        event.key.code == sf::Keyboard::Down ||
+                        event.key.code == sf::Keyboard::Left ||
+                        event.key.code == sf::Keyboard::Right)
+                    {
+                        currentKey = event.key.code;
+                    }
                 }
             }
+            for (auto& enemy : m_enemies)
+            {
+                enemy->updateTypeOnBoard(board);
+                enemy->movement(deltaTime, currentKey);
+            }
+
+            player.movement(deltaTime, currentKey);
+
+            window.clear();
+            board.draw(window);
+            player.draw(window);
+            for (auto& enemy : m_enemies) enemy->draw(window);
+            window.display();
         }
-
-        player.movement(deltaTime, currentKey);
-
-        window.clear();
-        board.draw(window);
-        player.draw(window);
-        enemy.draw(window);
-        window.display();
     }
+   catch (const std::exception& e)  
+   {  
+       std::cerr << "Error: " << e.what() << std::endl;  
+       window.close();  
+   }  
 
-
-    return;
+   return;  
 }
+
+
+void Controller::readLevelConfiguration(const Board& board)
+{
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
+    auto legalPositions = board.getLegalPositions();
+
+    std::ifstream file("levels.txt");
+    if (!file.is_open())
+    {
+        throw std::runtime_error("Could not open levels.txt");
+    }
+    file >> m_passingPercentage;
+    if (m_passingPercentage < 25 || m_passingPercentage > 95)
+    {
+        throw std::runtime_error("Invalid passing percentage in levels.txt");
+    }
+    int numOfEnemies = 0;
+    file >> numOfEnemies;
+    if (numOfEnemies < 0 || numOfEnemies > 100) 
+    {
+        throw std::runtime_error("Invalid number of enemies in levels.txt");
+    }
+	std::cout << "enemies: " << numOfEnemies << " m_passingPercentage: " << m_passingPercentage << std::endl; //debugging
+
+
+    std::set<int> usedPositions;  
+    int attempts = 0;
+    int i = 0;
+
+    while (i < numOfEnemies)
+    {
+        if (++attempts > 5000)
+            throw std::runtime_error("Too many attempts to generate unique enemy positions");
+
+        int index = std::rand() % legalPositions.size();
+        sf::Vector2u pos = legalPositions[index];
+        if (usedPositions.find(index) != usedPositions.end()) continue;
+        else 
+        {
+			usedPositions.insert(index);
+            m_enemies.emplace_back(std::make_unique<Enemy>(pos, 3.0f));
+            ++i;
+        }
+    }
+}
+
+
