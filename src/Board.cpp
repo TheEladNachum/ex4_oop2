@@ -97,7 +97,7 @@ void Board::draw(sf::RenderWindow& window) const
     {
         for (int col = 0; col < static_cast<int>(m_board[row].size()); ++col)
         {
-            switch (m_board[row][col])
+            /*switch (m_board[row][col])
             {
             case CellType::GROUND:
                 cellShape.setFillColor(sf::Color::Black);
@@ -105,6 +105,18 @@ void Board::draw(sf::RenderWindow& window) const
             case CellType::WALL:
                 cellShape.setFillColor(sf::Color::Blue);
                 break;
+            }*/
+            switch (m_board[row][col])
+            {
+                case CellType::GROUND:
+                    cellShape.setFillColor(sf::Color::Black);
+                    break;  
+              case CellType::WALL:
+                    cellShape.setFillColor(sf::Color::Blue);
+                    break;
+               case CellType::PATH:
+                   cellShape.setFillColor(sf::Color::Magenta);
+                   break;
             }
 
             // הוספת השוליים העליונים בציור
@@ -149,3 +161,17 @@ sf::Vector2u Board::getBoardSize() const
     return m_boardSize;
 }
 
+std::vector<sf::Vector2u> Board::getLegalPositions() const
+{
+    std::vector<sf::Vector2u> legalPositions;
+
+    for (unsigned int row = m_border; row < m_boardSize.y - m_border; ++row)
+    {
+        for (unsigned int col = m_border; col < m_boardSize.x - m_border; ++col)
+        {
+            legalPositions.emplace_back(col, row);
+        }
+    }
+
+    return legalPositions;
+}

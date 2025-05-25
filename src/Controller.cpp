@@ -14,6 +14,8 @@ void Controller::run()
     Board board(window.getSize(), Constants::CELLSIZE, 1);
 
     Player player(sf::Vector2u(4,4 ),10, board.getBoardSize());
+    auto legalPositions = board.getLegalPositions();
+    Enemy enemy(legalPositions, 3.0f);
     sf::Clock clock;
 
     window.setFramerateLimit(60);
@@ -37,16 +39,17 @@ void Controller::run()
                     event.key.code == sf::Keyboard::Left ||
                     event.key.code == sf::Keyboard::Right)
                 {
-                    currentKey = event.key.code; // עידכון כיוון
+                    currentKey = event.key.code;
                 }
             }
         }
 
-        player.movement(deltaTime, currentKey); // קריאה כל פריים – חובה
+        player.movement(deltaTime, currentKey);
 
         window.clear();
         board.draw(window);
         player.draw(window);
+        enemy.draw(window);
         window.display();
     }
 

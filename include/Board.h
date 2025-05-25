@@ -12,6 +12,7 @@ public:
     void setCell(const sf::Vector2u& gridPos, CellType type);
 
     sf::Vector2u getBoardSize() const;
+    std::vector<sf::Vector2u> getLegalPositions() const;
 
 private:
     std::vector<std::vector<CellType>> m_board;

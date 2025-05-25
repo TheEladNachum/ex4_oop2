@@ -31,6 +31,4 @@ private:
         sf::Vector2u m_startLocation;
         int m_tileSize;
 
-        sf::Vector2f snapToGrid(const sf::Vector2f& pos);
-
 };    

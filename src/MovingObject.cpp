@@ -28,11 +28,3 @@ int MovingObject::getSpeed() const
     return m_speed;
 }
 
-sf::Vector2f MovingObject::snapToGrid(const sf::Vector2f& pos)
-{
-    return sf::Vector2f(
-        std::round(pos.x / Constants::CELLSIZE) * Constants::CELLSIZE,
-        std::round((pos.y - 2 * Constants::CELLSIZE) / Constants::CELLSIZE) * Constants::CELLSIZE + 2 * Constants::CELLSIZE
-    );
-}
-
