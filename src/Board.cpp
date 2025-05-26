@@ -97,16 +97,17 @@ std::vector<sf::Vector2u> Board::getLegalPositions() const
 {
     std::vector<sf::Vector2u> legalPositions;
 
-    for (unsigned int row = m_border; row < m_boardSize.y - m_border; ++row)
+    //      row ↤ m_boardSize.x   |   col ↤ m_boardSize.y
+    for (unsigned int row = m_border; row < m_boardSize.x - m_border; ++row)
     {
-        for (unsigned int col = m_border; col < m_boardSize.x - m_border; ++col)
+        for (unsigned int col = m_border; col < m_boardSize.y - m_border; ++col)
         {
-            legalPositions.emplace_back(col, row);
+            legalPositions.emplace_back(col, row);   // (x=col, y=row)
         }
     }
-
     return legalPositions;
 }
+
 
 bool Board::hasPathCells() const
 {
