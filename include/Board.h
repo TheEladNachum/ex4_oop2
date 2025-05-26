@@ -17,12 +17,12 @@ public:
 
     sf::Vector2u getBoardSize() const;
     std::vector<sf::Vector2u> getLegalPositions() const;
+
     bool hasPathCells() const;
-
-
     void fillClosedArea(const std::vector<std::unique_ptr<Enemy>>& enemies); 
 
-
+    float getBottomOfBoard() const;
+    float getCoveredPercentage() const;
 
 private:
     std::vector<std::vector<CellType>> m_board;

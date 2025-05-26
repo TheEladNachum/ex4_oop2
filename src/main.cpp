@@ -3,7 +3,14 @@
 
 int main()
 {
-	Controller start;
-	start.run();
+	try
+	{
+		Controller start;
+		start.run();
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Fatal Error: " << e.what() << std::endl;
+	}
 	return 0;
 }

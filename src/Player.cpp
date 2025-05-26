@@ -2,12 +2,13 @@
 #include "Constants.h"
 #include <iostream>
 
-Player::Player(const sf::Vector2u& startLocation, float speed, sf::Vector2u boardSize)
+Player::Player(const sf::Vector2u& startLocation, float speed, sf::Vector2u boardSize, int life)
 {
     setStartLocation(startLocation);
     m_loc = startLocation;
     m_speed = speed;
     m_boardSize = boardSize;
+    m_life = life;
 
     m_shape.setSize(sf::Vector2f(Constants::CELLSIZE, Constants::CELLSIZE));
     m_shape.setFillColor(sf::Color::Green);
@@ -79,8 +80,6 @@ void Player::clearTrail(Board& board)
     m_trail.clear();
 }
 
-
-
 void Player::resetToStart()
 {
     m_loc = getStartLocation();
@@ -92,3 +91,8 @@ void Player::resetToStart()
     m_timeSinceLastMove = 0.f;
 }
 
+int Player::getLevel() const { return m_level; }
+void Player::setLevel(int level) { m_level = level; }
+
+int Player::getLife() const { return m_life; }
+void Player::TakingLifeInOne() { --m_life; }

@@ -8,19 +8,28 @@
 #include <random>
 #include <set>
 
-
+bool playerLost = false;
 
 void Controller::run()  
-{  
+{
+    m_enemies;
         sf::RenderWindow window(sf::VideoMode(1200, 800), "Xonix");
+        sf::Font font;
+        try {
+            font = loadFontOrThrow("arial.ttf");
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Font loading error: " << e.what() << std::endl;
+            window.close();
+            return;
+        }
+
         try
         {
             Board board(window.getSize(), Constants::CELLSIZE, 1);
-
-            Player player(sf::Vector2u(0, 0), 10, board.getBoardSize());
+            Player player(sf::Vector2u(0, 0), 10, board.getBoardSize(), 3);
             sf::Clock clock;
             readLevelConfiguration(board);
-
             window.setFramerateLimit(60);
             sf::Keyboard::Key currentKey = sf::Keyboard::Unknown;
 
@@ -28,6 +37,7 @@ void Controller::run()
             //------------GAME LOOP--------------  
             while (window.isOpen())
             {
+                sf::Text infoText = createInfoText(font, player, board.getBottomOfBoard());
                 float deltaTime = clock.restart().asSeconds();
 
                 sf::Event event;
@@ -57,34 +67,8 @@ void Controller::run()
                 player.movement(deltaTime, currentKey);
                 player.updatePathOnBoard(board);
 
-                bool playerLost = false;
-
-                for (const auto& enemy : m_enemies)
-                {
-                    if (player.getGlobalBounds().intersects(enemy->getGlobalBounds()))
-                    {
-                        std::cout << "PLAYER LOST! (collision)" << std::endl;
-                        playerLost = true;
-                        player.clearTrail(board);
-                        player.resetToStart();
-                        break;
-                    }
-                }
-
-                if (!playerLost)
-                {
-                    for (const auto& enemy : m_enemies)
-                    {
-                        if (board.getCellType(enemy->getLocation()) == CellType::PATH)
-                        {
-                            std::cout << "PLAYER LOST! (enemy touched path)" << std::endl;
-                            playerLost = true;
-                            player.clearTrail(board);
-                            player.resetToStart();
-                            break;
-                        }
-                    }
-                }
+                playerLost = false;
+                playerLost = checkCollisions(player, board);
 
                 if (!playerLost &&
                     board.getCellType(player.getLocation()) == CellType::WALL &&
@@ -92,9 +76,17 @@ void Controller::run()
                 {
                     board.fillClosedArea(m_enemies);
                 }
+                if (board.getCoveredPercentage() >= m_passingPercentage)
+                {
+                    std::cout << "Level cleared! Moving to next stage." << std::endl;
+                }
 
 
-
+                if (playerLost && checkGameOver(player, board, window, font))
+                {
+                    return;
+                }
+               
                 window.clear();
                 board.draw(window);
                 player.draw(window);
@@ -102,15 +94,15 @@ void Controller::run()
                 {
                     enemy->draw(window);
                 }
+                window.draw(infoText);
                 window.display();
             }
         }
-        catch (const std::exception& e)
+        catch (const std::runtime_error& e)
         {
             std::cerr << "Error: " << e.what() << std::endl;
             window.close();
         }
-
    return;  
 }
 
@@ -160,4 +152,77 @@ void Controller::readLevelConfiguration(const Board& board)
     }
 }
 
+bool Controller::checkCollisions(Player& player, Board& board)
+{
+    for (const auto& enemy : m_enemies)
+    {
+        if (player.getGlobalBounds().intersects(enemy->getGlobalBounds()))
+        {
+            std::cout << "PLAYER LOST! (collision)" << std::endl;
+            player.clearTrail(board);
+            player.TakingLifeInOne();
+            player.resetToStart();
+            return true;
+        }
+    }
 
+    for (const auto& enemy : m_enemies)
+    {
+        if (board.getCellType(enemy->getLocation()) == CellType::PATH)
+        {
+            std::cout << "PLAYER LOST! (enemy touched path)" << std::endl;
+            player.clearTrail(board);
+            player.TakingLifeInOne();
+            player.resetToStart();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Controller::checkGameOver(Player& player, Board& board, sf::RenderWindow& window, const sf::Font& font)
+{
+    if (player.getLife() <= 0)
+    {
+        sf::Text gameOverText("Game Over", font, 60);
+        gameOverText.setFillColor(sf::Color::Red);
+        gameOverText.setPosition(400, 300);
+
+        window.clear();
+        board.draw(window);
+        player.draw(window);
+        for (const auto& enemy : m_enemies)
+            enemy->draw(window);
+        window.draw(gameOverText);
+        window.display();
+
+        sf::sleep(sf::seconds(3));
+        window.close();
+        return true;
+    }
+
+    return false;
+}
+
+sf::Font Controller::loadFontOrThrow(const std::string& path)
+{
+    sf::Font font;
+    if (!font.loadFromFile(path))
+    {
+        throw std::runtime_error("Failed to load font from file: " + path);
+    }
+    return font;
+}
+
+sf::Text Controller::createInfoText(const sf::Font& font, const Player& player, float boardBottom)
+{
+    sf::Text infoText;
+    infoText.setFont(font);
+    infoText.setString("Level: " + std::to_string(player.getLevel()) +
+        "  Life: " + std::to_string(player.getLife()));
+    infoText.setCharacterSize(26);
+    infoText.setFillColor(sf::Color::White);
+    infoText.setPosition(100.f, boardBottom - 40);
+    return infoText;
+}

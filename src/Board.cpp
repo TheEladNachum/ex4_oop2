@@ -33,7 +33,7 @@ Board::Board(sf::Vector2u windowSize, float cellSize, int borderThickness)
 void Board::draw(sf::RenderWindow& window) const
 {
     sf::RectangleShape cellShape(sf::Vector2f(m_cellSize, m_cellSize));
-    const float offsetY = 2 * m_cellSize; // השוליים העליונים
+    const float offsetY = 2 * m_cellSize;
 
     for (int row = 0; row < static_cast<int>(m_board.size()); ++row)
     {
@@ -52,7 +52,6 @@ void Board::draw(sf::RenderWindow& window) const
                    break;
             }
 
-            // הוספת השוליים העליונים בציור
             cellShape.setPosition(col * m_cellSize, row * m_cellSize);
             window.draw(cellShape);
         }
@@ -108,7 +107,6 @@ std::vector<sf::Vector2u> Board::getLegalPositions() const
 
     return legalPositions;
 }
-
 
 bool Board::hasPathCells() const
 {
@@ -196,4 +194,36 @@ void Board::fillClosedArea(const std::vector<std::unique_ptr<Enemy>>& enemies)
         for (int x = 0; x < cols; ++x)
             if (m_board[y][x] == CellType::PATH)
                 m_board[y][x] = CellType::WALL;
+}
+
+float Board::getBottomOfBoard() const
+{
+    float offsetY = 2 * m_cellSize; // אותו offset כמו בציור
+    float height = static_cast<float>(m_board.size()) * m_cellSize;
+    return offsetY + height;
+}
+
+float Board::getCoveredPercentage() const
+{
+    int wallCount = 0;
+    int totalPlayable = 0;
+
+    for (int y = m_border; y < static_cast<int>(m_board.size()) - m_border; ++y)
+    {
+        for (int x = m_border; x < static_cast<int>(m_board[y].size()) - m_border; ++x)
+        {
+            CellType type = m_board[y][x];
+            if (type == CellType::WALL || type == CellType::GROUND)
+            {
+                ++totalPlayable;
+                if (type == CellType::WALL)
+                    ++wallCount;
+            }
+        }
+    }
+
+    if (totalPlayable == 0)
+        return 0.f;
+
+    return (static_cast<float>(wallCount) / totalPlayable) * 100.f;
 }
